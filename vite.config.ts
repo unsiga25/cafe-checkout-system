@@ -8,4 +8,15 @@ export default defineConfig({
     react(),
     babel({ presets: [reactCompilerPreset()] })
   ],
+  optimizeDeps: {
+    include: ['@ionic/react', '@ionic/react-router', 'ionicons'],
+  },
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: './src/setupTests.ts',
+    transformMode: {
+      web: [/\.[jt]sx?$/],
+    },
+  }
 })
