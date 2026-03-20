@@ -168,10 +168,10 @@ Trade-off: does not handle typos. Acceptable for a café menu where names are sh
 
 | Category | Technology |
 |---|---|
-| Framework | React 18 + TypeScript (strict) |
+| Framework | React 19 + TypeScript (strict) |
 | Build tool | Vite 5 |
 | State | Redux Toolkit + React Redux |
-| UI library | Ionic Framework v7 |
+| UI library | Ionic Framework v8 |
 | Routing | Ionic React Router + React Router v5 |
 | Testing | Vitest + React Testing Library |
 | API | MockAPI.io (REST) |
