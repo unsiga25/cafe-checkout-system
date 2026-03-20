@@ -8,6 +8,15 @@ export default defineConfig({
     react(),
     babel({ presets: [reactCompilerPreset()] })
   ],
+  server: {
+    proxy: {
+      '/off-api': {
+        target: 'https://world.openfoodfacts.org',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/off-api/, ''),
+      },
+    },
+  },
   optimizeDeps: {
     include: ['@ionic/react', '@ionic/react-router', 'ionicons'],
   },

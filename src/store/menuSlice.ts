@@ -1,48 +1,61 @@
 import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { Product, SortField, SortOrder } from '../types';
-import { deduplicateProducts, isDrinkCategory } from '../utils';
+import { deduplicateProducts } from '../utils';
 
-interface DummyProduct {
-  id: number;
+interface MockAPIProduct {
+  id?: string | number;
+  _id?: string | number;
   title: string;
-  price: number;
+  price: number | string;
   category: string;
   description: string;
   thumbnail: string;
-}
-
-interface DummyResponse {
-  products: DummyProduct[];
+  ingredients: string;
+  allergens: string;
+  isDrink: boolean | string;
+  nutriScore: string;
+  customizations?: Record<string, string[]>;
 }
 
 export const fetchMenuItems = createAsyncThunk<Product[], void, { rejectValue: string }>(
   'menu/fetchMenuItems',
   async (_, { rejectWithValue }) => {
     try {
-      const categories = ['groceries', 'beverages'];
-      const requests = categories.map((cat) =>
-        fetch(`https://dummyjson.com/products/category/${cat}?limit=20`)
-      );
-      requests.push(fetch('https://dummyjson.com/products?limit=50&skip=0'));
+      const url = 'https://69bd4da62bc2a25b22ae34fa.mockapi.io/products';
+      const response = await fetch(url);
 
-      const responses = await Promise.all(requests);
-      const jsonResults: DummyResponse[] = await Promise.all(responses.map((r) => r.json()));
+      if (!response.ok) throw new Error(`API error: ${response.status}`);
 
-      const allProducts: DummyProduct[] = jsonResults.flatMap((r) => r.products ?? []);
+      const data: MockAPIProduct[] = await response.json();
 
-      const mapped: Product[] = allProducts.map((p) => ({
-        id: p.id,
-        title: p.title,
-        price: p.price,
-        category: p.category,
-        description: p.description,
-        thumbnail: p.thumbnail,
-        isDrink: isDrinkCategory(p.category),
-      }));
+      if (!Array.isArray(data) || data.length === 0) {
+        return rejectWithValue('No products found.');
+      }
+
+      const mapped: Product[] = data.map((p, index) => {
+        // Try every possible id field MockAPI might use
+        const rawId = p.id ?? p._id ?? index + 1;
+        const id = String(rawId);
+
+        return {
+          id,
+          title: p.title ?? 'Unnamed',
+          price: Number(p.price),
+          category: p.category ?? '',
+          description: p.description ?? '',
+          thumbnail: p.thumbnail ?? '',
+          ingredients: p.ingredients ?? 'Not listed',
+          allergens: p.allergens ?? 'None listed',
+          isDrink: p.isDrink === true || p.isDrink === 'true',
+          nutriScore: p.nutriScore ?? 'c',
+          customizations: p.customizations ?? {},
+        };
+      });
 
       return deduplicateProducts(mapped);
     } catch (err) {
-      return rejectWithValue('Failed to fetch menu items. Please try again.');
+      const message = err instanceof Error ? err.message : 'Unknown error';
+      return rejectWithValue(`Failed to fetch menu: ${message}`);
     }
   }
 );

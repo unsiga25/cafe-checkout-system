@@ -1,8 +1,5 @@
 import React from 'react';
-import {
-  IonContent, IonList, IonText, IonButton, IonIcon,
-  IonItem, IonLabel, IonNote, IonFooter, IonToolbar,
-} from '@ionic/react';
+import { IonContent, IonText, IonButton, IonIcon } from '@ionic/react';
 import { bagHandleOutline, cardOutline } from 'ionicons/icons';
 import CartItemRow from '../components/CartItemRow';
 import ReceiptModal from '../components/ReceiptModal';
@@ -24,44 +21,64 @@ const CartPage: React.FC = () => {
     <>
       <IonContent className="cart-content">
         {isEmpty ? (
-          <div className="empty-cart">
-            <IonIcon icon={bagHandleOutline} className="empty-cart-icon" />
-            <IonText color="medium">
-              <h3>Your cart is empty</h3>
-              <p>Add some items from the menu!</p>
-            </IonText>
+          <div className="cart-empty">
+            <div className="cart-empty-icon">
+              <IonIcon icon={bagHandleOutline} />
+            </div>
+            <p className="cart-empty-title">Your cart is empty</p>
+            <p className="cart-empty-sub">Add items from the menu to get started</p>
           </div>
         ) : (
-          <>
-            <IonList className="cart-list" data-testid="cart-list">
-              {cartItems.map((item) => <CartItemRow key={item.cartItemId} item={item} />)}
-            </IonList>
-            <div className="cart-totals">
-              <IonItem lines="none">
-                <IonLabel>Subtotal</IonLabel>
-                <IonNote slot="end" data-testid="cart-subtotal">{formatCurrency(subtotal)}</IonNote>
-              </IonItem>
-              <IonItem lines="none">
-                <IonLabel color="medium">Service Charge (10%)</IonLabel>
-                <IonNote slot="end">{formatCurrency(serviceCharge)}</IonNote>
-              </IonItem>
-              <IonItem lines="none" className="total-row">
-                <IonLabel><strong>Total</strong></IonLabel>
-                <IonNote slot="end" className="grand-total" data-testid="cart-total">
-                  <strong>{formatCurrency(total)}</strong>
-                </IonNote>
-              </IonItem>
+          <div className="cart-layout">
+
+            {/* ── Items ──────────────────────────────────── */}
+            <div className="cart-items-wrap">
+              <p className="cart-section-label">Your Order</p>
+              <div className="cart-items-list">
+                {cartItems.map((item) => (
+                  <CartItemRow key={item.cartItemId} item={item} />
+                ))}
+              </div>
             </div>
-          </>
+
+            {/* ── Summary ────────────────────────────────── */}
+            <div className="cart-summary-wrap">
+              <p className="cart-section-label">Order Summary</p>
+              <div className="cart-summary-card">
+                <div className="cart-summary-row">
+                  <span>Subtotal</span>
+                  <span data-testid="cart-subtotal">{formatCurrency(subtotal)}</span>
+                </div>
+                <div className="cart-summary-row">
+                  <span>Service Charge <span className="cart-summary-muted">(10%)</span></span>
+                  <span>{formatCurrency(serviceCharge)}</span>
+                </div>
+                <div className="cart-summary-divider" />
+                <div className="cart-summary-row cart-summary-total">
+                  <span>Total</span>
+                  <span data-testid="cart-total">{formatCurrency(total)}</span>
+                </div>
+
+                <IonButton
+                  expand="block"
+                  onClick={() => dispatch(checkout())}
+                  className="cart-checkout-btn"
+                  data-testid="checkout-btn"
+                >
+                  <IonIcon slot="start" icon={cardOutline} />
+                  Checkout — {formatCurrency(total)}
+                </IonButton>
+
+                <p className="cart-summary-note">
+                  Prices include all applicable taxes. Service charge is non-negotiable.
+                </p>
+              </div>
+            </div>
+
+          </div>
         )}
-        {!isEmpty && (
-        <IonButton expand="block" color="primary" onClick={() => dispatch(checkout())} className="checkout-btn" data-testid="checkout-btn">
-              <IonIcon slot="start" icon={cardOutline} />
-              Checkout — {formatCurrency(total)}
-            </IonButton>
-      )}
       </IonContent>
-      
+
       {receipt && <ReceiptModal receipt={receipt} />}
     </>
   );

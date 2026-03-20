@@ -1,10 +1,12 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { CartItem, DrinkSize, Product, Receipt } from '../types';
-import { calcServiceCharge, calcSubtotal, getCartItemId, getSizeAdjustedPrice } from '../utils';
+import { CartItem, Product, Receipt } from '../types';
+import { calcServiceCharge, calcSubtotal, getSizeAdjustedPrice } from '../utils';
 
-interface AddToCartPayload {
+export interface AddToCartPayload {
   product: Product;
-  size?: DrinkSize;
+  selectedOptions: Record<string, string>;
+  specialInstructions?: string;
+  quantity: number;
 }
 
 interface UpdateQuantityPayload {
@@ -17,25 +19,38 @@ interface CartState {
   receipt: Receipt | null;
 }
 
-const initialState: CartState = {
-  items: [],
-  receipt: null,
-};
+const initialState: CartState = { items: [], receipt: null };
+
+function buildCartItemId(productId: string, selectedOptions: Record<string, string>): string {
+  const suffix = Object.entries(selectedOptions)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([k, v]) => `${k}:${v}`)
+    .join('|');
+  return suffix ? `${productId}__${suffix}` : productId;
+}
 
 const cartSlice = createSlice({
   name: 'cart',
   initialState,
   reducers: {
     addToCart(state, action: PayloadAction<AddToCartPayload>) {
-      const { product, size } = action.payload;
-      const cartItemId = getCartItemId(product.id, size);
+      const { product, selectedOptions, specialInstructions, quantity } = action.payload;
+      const cartItemId = buildCartItemId(product.id, selectedOptions);
+      const unitPrice = getSizeAdjustedPrice(product.price, selectedOptions['size']);
       const existing = state.items.find((i) => i.cartItemId === cartItemId);
-      const unitPrice = getSizeAdjustedPrice(product.price, size);
 
       if (existing) {
-        existing.quantity += 1;
+        existing.quantity += quantity;
+        if (specialInstructions) existing.specialInstructions = specialInstructions;
       } else {
-        state.items.push({ cartItemId, product, quantity: 1, size, unitPrice });
+        state.items.push({
+          cartItemId,
+          product,
+          quantity,
+          selectedOptions,
+          specialInstructions,
+          unitPrice,
+        });
       }
     },
     removeFromCart(state, action: PayloadAction<string>) {
@@ -50,6 +65,32 @@ const cartSlice = createSlice({
         state.items = state.items.filter((i) => i.cartItemId !== cartItemId);
       }
     },
+    updateItemOptions(
+  state,
+  action: PayloadAction<{ cartItemId: string; selectedOptions: Record<string, string> }>
+) {
+  const { cartItemId, selectedOptions } = action.payload;
+  const item = state.items.find((i) => i.cartItemId === cartItemId);
+  if (!item) return;
+
+  // Recalculate price if size changed
+  item.selectedOptions = selectedOptions;
+  item.unitPrice = getSizeAdjustedPrice(item.product.price, selectedOptions['size']);
+
+  // Rebuild cartItemId to reflect new options
+  const newId = buildCartItemId(item.product.id, selectedOptions);
+
+  // If another item already has this exact config, merge quantities
+  const conflict = state.items.find(
+    (i) => i.cartItemId === newId && i.cartItemId !== cartItemId
+  );
+  if (conflict) {
+    conflict.quantity += item.quantity;
+    state.items = state.items.filter((i) => i.cartItemId !== cartItemId);
+  } else {
+    item.cartItemId = newId;
+  }
+},
     checkout(state) {
       const subtotal = calcSubtotal(state.items);
       const serviceCharge = calcServiceCharge(subtotal);
@@ -68,5 +109,8 @@ const cartSlice = createSlice({
   },
 });
 
-export const { addToCart, removeFromCart, updateQuantity, checkout, clearReceipt } = cartSlice.actions;
+export const {
+  addToCart, removeFromCart, updateQuantity,
+  updateItemOptions, checkout, clearReceipt,
+} = cartSlice.actions;
 export default cartSlice.reducer;
