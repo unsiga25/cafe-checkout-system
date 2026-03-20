@@ -13,15 +13,13 @@ A mobile-friendly café checkout app built with **React + TypeScript**, **Redux 
 ### Install & Run
 ```bash
 # 1. Clone or unzip the project
-cd cafe-checkout
+cd cafe-checkout-system
 
-# 2. Create your .env file in the project root
-echo "VITE_API_URL=https://[your-id].mockapi.io" > .env
 
-# 3. Install dependencies
+# 2. Install dependencies
 npm install
 
-# 4. Start the dev server
+# 3. Start the dev server
 npm run dev
 # → Opens at http://localhost:5173
 ```
