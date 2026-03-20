@@ -118,6 +118,17 @@ Trade-off: does not handle typos. Acceptable for a café menu where names are sh
 
 ### Ionic Integration
 
+This project was my first time using Ionic Framework. My previous UI library experience is with **Bootstrap**, **Tailwind CSS**, and **Material UI** — and I approached Ionic with the same mindset:
+
+- Read the official [Ionic documentation](https://ionicframework.com/docs) to understand the component API and how Ionic's CSS custom properties work as the theming system (equivalent to Tailwind's config or MUI's theme provider)
+- Treated `IonCard`, `IonItem`, `IonSelect`, `IonModal` etc. the same way I would treat MUI's `<Card>`, `<MenuItem>`, `<Select>`, `<Dialog>` — drop-in components with slot-based composition instead of children props
+- Ionic's `--ion-color-primary` CSS variables felt familiar coming from Bootstrap's `$primary` SASS variables and MUI's `palette.primary` — just overridden in `src/theme/variables.css` instead
+- The `IonTabs` + `IonRouterOutlet` navigation pattern is similar to MUI's drawer + route outlet pattern, adapted for mobile tab bar navigation
+- Where Ionic's event system conflicted with React's synthetic events (particularly on `IonCard` click + button click propagation), I fell back to plain HTML elements (`<button>`, `<input>`, `<div>`) which is the same pragmatic approach I'd take with any component library when the abstraction gets in the way
+- Pull-to-refresh (`IonRefresher`), the bottom tab badge (`IonBadge`), and the mobile-first layout were the most distinctly "Ionic" parts — no direct equivalent in Bootstrap or Tailwind without custom JS
+
+The main difference from libraries I'd used before is that Ionic is **platform-aware** and designed to feel native on iOS and Android, whereas Bootstrap and Tailwind are purely web-focused. This meant paying more attention to things like safe areas, tab bar height, and touch targets than I normally would.
+
 - **Navigation** — `IonReactRouter` + `IonTabs` + `IonRouterOutlet` (bottom tab bar)
 - **Components** — `IonCard`, `IonModal`, `IonSelect`, `IonTextarea`, `IonRefresher`, `IonSpinner`
 - **Theming** — CSS custom properties in `src/theme/variables.css` override all Ionic color tokens with a warm espresso-brown palette
